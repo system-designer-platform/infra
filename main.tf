@@ -8,24 +8,21 @@ terraform {
 }
 
 provider "google" {
-  credentials = file("gcp-key.json")
-  project = "cancy-329206"
+  project = "douter"
+}
+
+provider "google-beta" {
+  project = "douter"
 }
 
 # Cloud storage
-data "google_iam_policy" "viewer" {
-  binding {
-    role = "roles/storage.objectViewer"
-    members = [
-      "allUsers",
-    ] 
-  }
-}
-
 resource "google_storage_bucket" "website_bucket" {
-  name          = "website-bucket"
+  name          = "douter-website-bucket"
   location      = "ASIA"
   force_destroy = true
+  
+  uniform_bucket_level_access = true
+  
   website {
     main_page_suffix = "index.html"
   }
@@ -37,16 +34,29 @@ resource "google_storage_bucket" "website_bucket" {
   }
 }
 
-resource "google_storage_bucket_iam_policy" "viewer" {
+resource "google_storage_bucket_iam_member" "viewer" {
   bucket = google_storage_bucket.website_bucket.name
-  policy_data = data.google_iam_policy.viewer.policy_data
+  role = "roles/storage.objectViewer"
+  member = "allUsers"
 }
 
 # Artifact registry
-resource "google_artifact_registry_repository" "user" {
-  provider = google-beta
+resource "google_project_service" "artifact_registry" {
+  service = "artifactregistry.googleapis.com"
 
+  timeouts {
+    create = "30m"
+    update = "40m"
+  }
+
+  disable_dependent_services = true
+}
+
+resource "google_artifact_registry_repository" "backend_user" {
+  provider = google-beta
+  
   location = "asia-east1"
   repository_id = "backend-user"
   format = "DOCKER"
+  depends_on = [google_project_service.artifact_registry]
 }
