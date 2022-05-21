@@ -40,23 +40,34 @@ resource "google_storage_bucket_iam_member" "viewer" {
   member = "allUsers"
 }
 
+# resource "google_project_service" "container_registry" {
+#   service = "containerregistry.googleapis.com"
+# 
+#   timeouts {
+#     create = "30m"
+#     update = "40m"
+#   }
+# 
+#   disable_dependent_services = true
+# }
+
 # Artifact registry
-resource "google_project_service" "artifact_registry" {
-  service = "artifactregistry.googleapis.com"
-
-  timeouts {
-    create = "30m"
-    update = "40m"
-  }
-
-  disable_dependent_services = true
-}
-
+# resource "google_project_service" "artifact_registry" {
+#   service = "artifactregistry.googleapis.com"
+# 
+#   timeouts {
+#     create = "30m"
+#     update = "40m"
+#   }
+# 
+#   disable_dependent_services = true
+# }
+# 
 resource "google_artifact_registry_repository" "backend_user" {
   provider = google-beta
   
   location = "asia-east1"
-  repository_id = "backend-user"
+  repository_id = "backend"
   format = "DOCKER"
-  depends_on = [google_project_service.artifact_registry]
+  #depends_on = [google_project_service.artifact_registry]
 }
